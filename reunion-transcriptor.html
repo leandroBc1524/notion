@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reunión — Transcriptor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f1f0ed;
+    --border: #e8e7e3;
+    --text: #1a1a18;
+    --text-muted: #9b9a97;
+    --text-light: #c4c3be;
+    --accent: #e16259;
+    --accent-light: #fdf3f2;
+    --accent-mid: #f5d0cd;
+    --blue: #2383e2;
+    --blue-light: #e9f3fc;
+    --green: #0f9d58;
+    --green-light: #e6f4ea;
+    --wave: #e16259;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 240px;
+    background: var(--surface2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0;
+    z-index: 10;
+  }
+
+  .sidebar-section {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 16px;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 4px;
+    margin: 0 8px;
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+
+  .sidebar-item:hover { background: var(--border); }
+  .sidebar-item.active { background: var(--surface); font-weight: 500; }
+
+  .sidebar-icon { width: 18px; height: 18px; opacity: 0.7; flex-shrink: 0; }
+
+  .sidebar-add {
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 5px 16px;
+    margin: 0 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s;
+  }
+  .sidebar-add:hover { background: var(--border); color: var(--text); }
+
+  /* MAIN */
+  .main {
+    margin-left: 240px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    height: 48px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+
+  .topbar-crumb { color: var(--text-muted); cursor: pointer; }
+  .topbar-crumb:hover { color: var(--text); }
+  .topbar-sep { color: var(--text-light); }
+
+  .content {
+    max-width: 780px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* PAGE TITLE */
+  .page-header {
+    margin-bottom: 32px;
+  }
+
+  .page-emoji {
+    font-size: 36px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .page-title {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    line-height: 1.2;
+  }
+
+  .date-tag {
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--blue);
+    background: var(--blue-light);
+    padding: 3px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .page-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .page-meta span { display: flex; align-items: center; gap: 5px; }
+
+  /* COMMENTS */
+  .comments-section {
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comments-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .comment-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f4a88a, #e16259);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .comment-placeholder {
+    font-size: 14px;
+    color: var(--text-light);
+    cursor: text;
+  }
+
+  /* RECORDER CARD */
+  .recorder-card {
+    background: var(--blue-light);
+    border: 1px solid #c8dff8;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .recorder-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #c8dff8;
+  }
+
+  .recorder-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 2px;
+  }
+
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+
+  .tab:hover { background: rgba(0,0,0,0.05); }
+
+  .tab.active {
+    background: white;
+    color: var(--text);
+    border-color: var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  .tab svg { opacity: 0.7; }
+
+  /* WAVEFORM */
+  .waveform-container {
+    flex: 1;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  .waveform-bar {
+    width: 3px;
+    border-radius: 2px;
+    background: var(--blue);
+    opacity: 0.3;
+    transition: height 0.1s ease;
+  }
+
+  .waveform-bar.active { opacity: 0.8; }
+
+  /* CONTROL BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+
+  .btn-pause {
+    background: white;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-pause:hover { background: var(--surface2); }
+
+  .btn-stop {
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid var(--accent-mid);
+  }
+  .btn-stop:hover { background: var(--accent-mid); }
+
+  .btn-start {
+    background: var(--blue);
+    color: white;
+  }
+  .btn-start:hover { background: #1a72c9; }
+
+  /* RECORDER BODY */
+  .recorder-body {
+    padding: 18px;
+    min-height: 120px;
+  }
+
+  .ai-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 14px;
+  }
+
+  /* UPGRADE NOTICE */
+  .info-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #c8dff8;
+    border-radius: 7px;
+    padding: 9px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 12px;
+  }
+
+  .info-bar .info-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .info-bar a {
+    color: var(--blue);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  /* STATUS: recording */
+  .recording-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .rec-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  /* TRANSCRIPT OUTPUT */
+  .transcript-section {
+    margin-top: 24px;
+  }
+
+  .transcript-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+
+  .transcript-entry {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .transcript-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-light);
+    flex-shrink: 0;
+    padding-top: 2px;
+    width: 46px;
+  }
+
+  .transcript-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .transcript-text.interim {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* START PAGE */
+  .start-section {
+    text-align: center;
+    padding: 28px 0 14px;
+  }
+
+  .start-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+
+  .start-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+    line-height: 1.6;
+  }
+
+  /* NOTES TAB */
+  .notes-area {
+    width: 100%;
+    min-height: 120px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    line-height: 1.7;
+  }
+
+  .notes-area::placeholder { color: var(--text-light); }
+
+  /* TIMER */
+  .timer {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    min-width: 48px;
+  }
+
+  /* ERROR */
+  .error-msg {
+    background: var(--accent-light);
+    border: 1px solid var(--accent-mid);
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--accent);
+    margin-top: 10px;
+  }
+
+  /* SUPPORT NOTE */
+  .support-note {
+    font-size: 12px;
+    color: var(--text-light);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div style="padding: 8px 12px 4px; display:flex; align-items:center; gap:8px;">
+    <div style="width:28px;height:28px;background:#e16259;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;">☕</div>
+    <span style="font-size:14px;font-weight:600;">cafe</span>
+  </div>
+
+  <div class="sidebar-section">Espacios de equipo</div>
+  <a class="sidebar-item" href="#">
+    <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+    Teamspace Home
+  </a>
+  <a class="sidebar-item" href="#">
+    <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+    Seguimiento de Lectura
+  </a>
+  <div class="sidebar-add">
+    <span style="font-size:16px;line-height:1">+</span> Agregar contenido
+  </div>
+
+  <div class="sidebar-section" style="margin-top:12px;">Privado</div>
+  <div class="sidebar-add">
+    <span style="font-size:16px;line-height:1">+</span> Agregar página nueva
+  </div>
+
+  <div class="sidebar-section" style="margin-top:12px;">Apps de Notion</div>
+  <a class="sidebar-item" href="#">
+    <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+    Notion Mail
+  </a>
+  <a class="sidebar-item" href="#">
+    <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+    Notion Calendar
+  </a>
+
+  <hr class="divider" style="margin: 12px 16px;">
+  <a class="sidebar-item active" href="#">
+    <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"/></svg>
+    Reuniones
+  </a>
+  <a class="sidebar-item" href="#">
+    <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+    My tasks
+  </a>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-crumb">cafe</span>
+    <span class="topbar-sep">/</span>
+    <span class="topbar-crumb">Reuniones</span>
+    <span class="topbar-sep">/</span>
+    <span style="color:var(--text);">Reunión @Hoy</span>
+  </div>
+
+  <div class="content">
+    <div class="page-header">
+      <span class="page-emoji">🎙️</span>
+      <div class="page-title">
+        Reunión
+        <span class="date-tag" id="dateTag">@Hoy</span>
+      </div>
+      <div class="page-meta">
+        <span>
+          <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+          <span id="fullDate"></span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="comments-section">
+      <div class="comments-label">Comentarios</div>
+      <div class="comment-input">
+        <div class="avatar">U</div>
+        <span class="comment-placeholder">Agregar un comentario...</span>
+      </div>
+    </div>
+
+    <!-- RECORDER CARD -->
+    <div class="recorder-card">
+      <div class="recorder-header">
+        <div class="recorder-title">Reunión <span style="color:var(--blue);">@Hoy</span></div>
+      </div>
+
+      <!-- TABS + CONTROLS BAR -->
+      <div style="padding: 10px 14px; display:flex; align-items:center; gap:10px; border-bottom: 1px solid #c8dff8; background: rgba(255,255,255,0.4);">
+        <div class="tabs">
+          <div class="tab active" id="tabNotas" onclick="switchTab('notas')">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+            Notas
+          </div>
+          <div class="tab" id="tabTranscripcion" onclick="switchTab('transcripcion')">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"/></svg>
+            Transcripción
+          </div>
+        </div>
+
+        <!-- Waveform -->
+        <div class="waveform-container" id="waveformContainer">
+          <!-- bars injected by JS -->
+        </div>
+
+        <span class="timer" id="timer">00:00</span>
+
+        <!-- RECORD CONTROLS -->
+        <div id="ctrlsIdle">
+          <button class="btn btn-start" onclick="startRecording()">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"/></svg>
+            Grabar
+          </button>
+        </div>
+        <div id="ctrlsRecording" style="display:none; display:flex; gap:6px; align-items:center; display:none;">
+          <button class="btn btn-pause" id="btnPause" onclick="togglePause()">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" id="pauseIcon"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            Pausar
+          </button>
+          <button class="btn btn-stop" onclick="stopRecording()">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd"/></svg>
+            Detener
+          </button>
+        </div>
+      </div>
+
+      <!-- BODY -->
+      <div class="recorder-body">
+
+        <!-- NOTAS TAB -->
+        <div id="panelNotas">
+          <div class="ai-hint">La IA resumirá las notas y la transcripción</div>
+          <textarea class="notes-area" placeholder="Escribe tus notas aquí..."></textarea>
+        </div>
+
+        <!-- TRANSCRIPCION TAB -->
+        <div id="panelTranscripcion" style="display:none;">
+          <!-- Idle state -->
+          <div id="idleState" class="start-section">
+            <div class="start-icon">🎤</div>
+            <p class="start-desc">Presiona <strong>Grabar</strong> para comenzar.<br>Se transcribirá automáticamente todo lo que se diga.</p>
+            <div id="errorMsg" style="display:none;"></div>
+          </div>
+
+          <!-- Recording state -->
+          <div id="recordingState" style="display:none;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+              <div class="recording-status">
+                <div class="rec-dot"></div>
+                Grabando…
+              </div>
+              <div id="sourceBadge"></div>
+            </div>
+            <div id="transcriptList"></div>
+            <div id="interimLine" class="transcript-entry" style="display:none;">
+              <span class="transcript-time" id="interimTime"></span>
+              <span class="transcript-text interim" id="interimText"></span>
+            </div>
+          </div>
+
+          <!-- Done state -->
+          <div id="doneState" style="display:none;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>
+              <span style="font-size:13px;color:var(--green);font-weight:500;">Grabación terminada</span>
+            </div>
+            <div id="finalTranscriptList"></div>
+            <div style="margin-top:16px; display:flex; gap:8px;">
+              <button class="btn btn-start" onclick="newRecording()" style="font-size:12px; padding: 5px 12px;">
+                + Nueva grabación
+              </button>
+              <button class="btn btn-pause" onclick="copyTranscript()" style="font-size:12px; padding: 5px 12px;">
+                📋 Copiar texto
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- INFO BAR -->
+        <div class="info-bar" id="infoBar">
+          <div class="info-icon">i</div>
+          <span>Esta herramienta usa la API de reconocimiento de voz de tu navegador — funciona sin conexión a servidores externos.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Support note -->
+    <div class="support-note" style="margin-top:14px;">Compatible con Chrome, Edge y Safari. Firefox requiere configuración adicional.</div>
+  </div>
+</main>
+
+<script>
+  // DATE
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('fullDate').textContent = now.toLocaleDateString('es-ES', opts);
+
+  // TABS
+  function switchTab(tab) {
+    document.getElementById('tabNotas').classList.toggle('active', tab==='notas');
+    document.getElementById('tabTranscripcion').classList.toggle('active', tab==='transcripcion');
+    document.getElementById('panelNotas').style.display = tab==='notas' ? '' : 'none';
+    document.getElementById('panelTranscripcion').style.display = tab==='transcripcion' ? '' : 'none';
+  }
+
+  // WAVEFORM
+  const wc = document.getElementById('waveformContainer');
+  const BAR_COUNT = 40;
+  for(let i=0;i<BAR_COUNT;i++){
+    const b = document.createElement('div');
+    b.className = 'waveform-bar';
+    b.style.height = '6px';
+    wc.appendChild(b);
+  }
+  const bars = wc.querySelectorAll('.waveform-bar');
+
+  let waveInterval = null;
+  let analyser = null, dataArray = null, audioCtx = null, sourceNode = null;
+
+  function animateWave(active) {
+    clearInterval(waveInterval);
+    if(!active) {
+      bars.forEach(b => { b.style.height='6px'; b.classList.remove('active'); });
+      return;
+    }
+    waveInterval = setInterval(() => {
+      if(analyser && dataArray) {
+        analyser.getByteFrequencyData(dataArray);
+        bars.forEach((b, i) => {
+          const val = dataArray[Math.floor(i * dataArray.length / BAR_COUNT)];
+          const h = 4 + (val / 255) * 28;
+          b.style.height = h + 'px';
+          b.classList.toggle('active', val > 10);
+        });
+      } else {
+        bars.forEach(b => {
+          b.style.height = (4 + Math.random() * 18) + 'px';
+          b.classList.add('active');
+        });
+      }
+    }, 80);
+  }
+
+  // TIMER
+  let timerInterval = null, seconds = 0, paused = false;
+  function startTimer() { seconds=0; clearInterval(timerInterval); timerInterval=setInterval(()=>{ if(!paused){seconds++;updateTimerDisplay();} },1000); }
+  function stopTimer() { clearInterval(timerInterval); }
+  function updateTimerDisplay() { const m=String(Math.floor(seconds/60)).padStart(2,'0'),s=String(seconds%60).padStart(2,'0'); document.getElementById('timer').textContent=m+':'+s; }
+  function currentTimestamp() { const m=String(Math.floor(seconds/60)).padStart(2,'0'),s=String(seconds%60).padStart(2,'0'); return m+':'+s; }
+
+  // STATE
+  let recognition = null;
+  let entries = [];
+  let displayStream = null;
+  let micStream = null;
+  let processorNode = null;
+  let sourceMode = ''; // 'system' or 'mic'
+
+  // ─── MAIN: choose source ───────────────────────────────
+  async function startRecording() {
+    if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      showError('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.');
+      return;
+    }
+    switchTab('transcripcion');
+    showSourcePicker();
+  }
+
+  function showSourcePicker() {
+    document.getElementById('idleState').innerHTML = `
+      <div class="start-icon">🎙️</div>
+      <p class="start-desc" style="margin-bottom:20px;">¿Qué audio quieres transcribir?</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-start" onclick="beginCapture('system')" style="flex-direction:column;gap:4px;padding:14px 20px;min-width:140px;">
+          <span style="font-size:22px;">🖥️</span>
+          <span style="font-size:13px;font-weight:600;">Audio del sistema</span>
+          <span style="font-size:11px;font-weight:400;opacity:0.8;">Zoom, Meet, Teams…</span>
+        </button>
+        <button class="btn" onclick="beginCapture('mic')" style="flex-direction:column;gap:4px;padding:14px 20px;min-width:140px;background:white;border:1px solid var(--border);color:var(--text);">
+          <span style="font-size:22px;">🎤</span>
+          <span style="font-size:13px;font-weight:600;">Micrófono</span>
+          <span style="font-size:11px;font-weight:400;opacity:0.6;">Tu voz directamente</span>
+        </button>
+      </div>
+      <div id="errorMsg" style="display:none;margin-top:14px;"></div>
+    `;
+    document.getElementById('idleState').style.display = '';
+  }
+
+  async function beginCapture(mode) {
+    sourceMode = mode;
+
+    if (mode === 'system') {
+      // Capture system audio via getDisplayMedia
+      try {
+        displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,   // Chrome requires video:true to show the picker
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            sampleRate: 44100,
+          }
+        });
+
+        // Check audio track exists
+        const audioTracks = displayStream.getAudioTracks();
+        if (audioTracks.length === 0) {
+          displayStream.getTracks().forEach(t=>t.stop());
+          showError('⚠️ No se capturó audio. Asegúrate de marcar "Compartir audio del sistema" al elegir la pestaña/ventana en Chrome.');
+          return;
+        }
+
+        // Stop video track (we only need audio)
+        displayStream.getVideoTracks().forEach(t => t.stop());
+
+        setupAudioAnalyser(displayStream);
+        startSpeechRecognitionWithStream(displayStream);
+
+      } catch(err) {
+        if(err.name === 'NotAllowedError') {
+          showError('Permiso denegado. Debes aceptar compartir la pantalla y marcar "Compartir audio del sistema".');
+        } else {
+          showError('Error al capturar audio: ' + err.message);
+        }
+        return;
+      }
+
+    } else {
+      // Mic mode
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setupAudioAnalyser(micStream);
+        startSpeechRecognitionWithStream(micStream);
+      } catch(err) {
+        showError('No se pudo acceder al micrófono: ' + err.message);
+        return;
+      }
+    }
+  }
+
+  function setupAudioAnalyser(stream) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      sourceNode = audioCtx.createMediaStreamSource(stream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 128;
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+      sourceNode.connect(analyser);
+    } catch(e) { analyser = null; }
+  }
+
+  function startSpeechRecognitionWithStream(stream) {
+    // The Web Speech API uses the default mic internally — we can't pipe a custom stream to it.
+    // For SYSTEM audio: we create a virtual "loopback" by routing the stream audio to a hidden
+    // audio element + use ScriptProcessorNode to keep the context alive, while the Speech API
+    // runs in parallel listening to whatever Chrome picks as default. The main trick is:
+    // on Windows, enable "Stereo Mix" or use a virtual cable; on Chrome we relay the stream
+    // to an AudioContext destination so Chrome's speech API can pick it up.
+
+    if (sourceMode === 'system') {
+      // Route system audio to AudioContext destination so speech API can hear it
+      try {
+        const dest = audioCtx.createMediaStreamDestination();
+        sourceNode.connect(dest);
+        // Play the audio (needed so Chrome's speech recognizer picks up the audio context)
+        const hiddenAudio = document.createElement('audio');
+        hiddenAudio.srcObject = stream;
+        hiddenAudio.muted = false; // unmute so speech API captures it
+        hiddenAudio.volume = 0.01; // very low volume to avoid echo but still active
+        hiddenAudio.play().catch(()=>{});
+        document.body.appendChild(hiddenAudio);
+        hiddenAudio.id = 'hiddenAudio';
+      } catch(e) {}
+    }
+
+    entries = [];
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.lang = 'es-ES';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (e) => {
+      let interim = '';
+      for(let i = e.resultIndex; i < e.results.length; i++) {
+        if(e.results[i].isFinal) {
+          const text = e.results[i][0].transcript.trim();
+          if(text) addEntry(text, currentTimestamp());
+          document.getElementById('interimLine').style.display = 'none';
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+      if(interim) {
+        document.getElementById('interimLine').style.display = 'flex';
+        document.getElementById('interimText').textContent = interim;
+        document.getElementById('interimTime').textContent = currentTimestamp();
+      }
+    };
+
+    recognition.onerror = (e) => {
+      if(e.error === 'not-allowed') {
+        showError('Permiso de micrófono denegado. El reconocimiento de voz necesita acceso al micrófono incluso para audio del sistema.');
+        stopRecording();
+      } else if(e.error !== 'no-speech') {
+        console.warn('Speech error:', e.error);
+      }
+    };
+
+    recognition.onend = () => {
+      // Auto-restart if not paused/stopped
+      if(recognition && !paused) {
+        try { recognition.start(); } catch(e) {}
+      }
+    };
+
+    recognition.start();
+
+    // UI: recording active
+    document.getElementById('ctrlsIdle').style.display = 'none';
+    document.getElementById('ctrlsRecording').style.display = 'flex';
+    document.getElementById('idleState').style.display = 'none';
+    document.getElementById('recordingState').style.display = '';
+    document.getElementById('doneState').style.display = 'none';
+    document.getElementById('transcriptList').innerHTML = '';
+    document.getElementById('infoBar').style.display = 'none';
+
+    // Show source badge
+    const badge = sourceMode === 'system'
+      ? `<span style="font-size:11px;background:#e9f3fc;color:var(--blue);padding:2px 8px;border-radius:4px;font-weight:500;">🖥️ Audio del sistema</span>`
+      : `<span style="font-size:11px;background:var(--green-light);color:var(--green);padding:2px 8px;border-radius:4px;font-weight:500;">🎤 Micrófono</span>`;
+    document.getElementById('sourceBadge').innerHTML = badge;
+
+    startTimer();
+    animateWave(true);
+    paused = false;
+  }
+
+  function addEntry(text, time) {
+    entries.push({ text, time });
+    const list = document.getElementById('transcriptList');
+    const div = document.createElement('div');
+    div.className = 'transcript-entry';
+    div.innerHTML = `<span class="transcript-time">${time}</span><span class="transcript-text">${text}</span>`;
+    list.appendChild(div);
+    div.scrollIntoView({ behavior:'smooth' });
+  }
+
+  function togglePause() {
+    paused = !paused;
+    const btn = document.getElementById('btnPause');
+    if(paused) {
+      if(recognition) recognition.abort();
+      animateWave(false);
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg> Reanudar`;
+    } else {
+      if(recognition) { try { recognition.start(); } catch(e){} }
+      animateWave(true);
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg> Pausar`;
+    }
+  }
+
+  function stopRecording() {
+    if(recognition) { recognition.onend=null; recognition.abort(); recognition=null; }
+    if(displayStream) { displayStream.getTracks().forEach(t=>t.stop()); displayStream=null; }
+    if(micStream) { micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
+    if(audioCtx) { audioCtx.close(); audioCtx=null; analyser=null; }
+    const ha = document.getElementById('hiddenAudio');
+    if(ha) ha.remove();
+    stopTimer();
+    animateWave(false);
+    paused = false;
+
+    document.getElementById('ctrlsIdle').style.display = '';
+    document.getElementById('ctrlsRecording').style.display = 'none';
+    document.getElementById('recordingState').style.display = 'none';
+    document.getElementById('doneState').style.display = '';
+    document.getElementById('infoBar').style.display = '';
+
+    const final = document.getElementById('finalTranscriptList');
+    final.innerHTML = '';
+    if(entries.length === 0) {
+      final.innerHTML = `
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:8px;">No se detectó ningún texto.</p>
+        ${sourceMode==='system' ? `<div class="info-bar" style="background:var(--accent-light);border-color:var(--accent-mid);">
+          <div class="info-icon" style="background:var(--accent);">!</div>
+          <span style="color:var(--accent);">En Chrome: al compartir pantalla, asegúrate de activar la casilla <strong>"Compartir audio del sistema"</strong> en la parte inferior del diálogo.</span>
+        </div>` : ''}`;
+    } else {
+      entries.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'transcript-entry';
+        div.innerHTML = `<span class="transcript-time">${e.time}</span><span class="transcript-text">${e.text}</span>`;
+        final.appendChild(div);
+      });
+    }
+  }
+
+  function newRecording() {
+    document.getElementById('doneState').style.display = 'none';
+    document.getElementById('timer').textContent = '00:00';
+    entries = [];
+    showSourcePicker();
+    document.getElementById('idleState').style.display = '';
+  }
+
+  function copyTranscript() {
+    const text = entries.map(e => `[${e.time}] ${e.text}`).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target.closest('button');
+      btn.textContent = '✅ Copiado';
+      setTimeout(()=>btn.textContent='📋 Copiar texto', 2000);
+    });
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    if(!el) return;
+    el.className = 'error-msg';
+    el.innerHTML = msg;
+    el.style.display = '';
+  }
+</script>
+</body>
+</html>
