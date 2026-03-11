@@ -499,9 +499,146 @@
 
   /* Divider */
   .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* FLOATING VERTICAL TOOLBAR */
+  .float-toolbar {
+    position: fixed;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 7px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+  }
+
+  .float-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.15s, transform 0.15s;
+    position: relative;
+    border: none;
+    background: transparent;
+  }
+
+  .float-btn:hover {
+    background: var(--surface2);
+    transform: scale(1.08);
+  }
+
+  .float-btn.active {
+    background: var(--accent-light);
+  }
+
+  .float-btn.record-active {
+    background: var(--accent-light);
+    animation: pulseBtn 1.2s ease-in-out infinite;
+  }
+
+  @keyframes pulseBtn {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(225,98,89,0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(225,98,89,0); }
+  }
+
+  .float-sep {
+    width: 22px;
+    height: 1px;
+    background: var(--border);
+    margin: 2px 0;
+  }
+
+  .float-tooltip {
+    position: absolute;
+    right: calc(100% + 10px);
+    background: #1a1a18;
+    color: white;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    padding: 4px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateX(4px);
+    transition: opacity 0.15s, transform 0.15s;
+  }
+
+  .float-btn:hover .float-tooltip {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Rec dot on toolbar */
+  .toolbar-rec-dot {
+    position: absolute;
+    top: 5px; right: 5px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: none;
+    animation: blink 1s ease-in-out infinite;
+  }
 </style>
 </head>
 <body>
+
+<!-- FLOATING VERTICAL TOOLBAR -->
+<div class="float-toolbar" id="floatToolbar">
+  <!-- Logo -->
+  <div style="width:34px;height:34px;background:#1a1a18;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:2px;flex-shrink:0;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="18" height="18" rx="3" fill="white" opacity="0.15"/>
+      <path d="M7 7h4v4H7zM13 7h4v4h-4zM7 13h4v4H7zM13 13h4v4h-4z" fill="white"/>
+    </svg>
+  </div>
+
+  <div class="float-sep"></div>
+
+  <!-- Record button -->
+  <button class="float-btn" id="floatRecord" onclick="floatToggleRecord()" title="">
+    <span id="floatRecIcon">🎙️</span>
+    <div class="toolbar-rec-dot" id="floatRecDot"></div>
+    <div class="float-tooltip" id="floatRecTooltip">Grabar reunión</div>
+  </button>
+
+  <!-- Notes -->
+  <button class="float-btn" onclick="switchTab('notas'); floatHighlight(this)">
+    ✏️
+    <div class="float-tooltip">Notas</div>
+  </button>
+
+  <!-- Transcript -->
+  <button class="float-btn" onclick="switchTab('transcripcion'); floatHighlight(this)">
+    📝
+    <div class="float-tooltip">Transcripción</div>
+  </button>
+
+  <div class="float-sep"></div>
+
+  <!-- Copy -->
+  <button class="float-btn" onclick="floatCopy(this)">
+    📋
+    <div class="float-tooltip">Copiar texto</div>
+  </button>
+
+  <!-- Stop -->
+  <button class="float-btn" id="floatStop" onclick="stopRecording()" style="display:none;">
+    <span style="font-size:14px;color:var(--accent);">⏹</span>
+    <div class="float-tooltip">Detener</div>
+  </button>
+</div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -1026,6 +1163,68 @@
     el.innerHTML = msg;
     el.style.display = '';
   }
+
+  // FLOATING TOOLBAR HELPERS
+  function floatToggleRecord() {
+    const isRecording = document.getElementById('ctrlsRecording').style.display !== 'none';
+    if(isRecording) {
+      togglePause();
+    } else {
+      startRecording();
+    }
+  }
+
+  function floatHighlight(btn) {
+    document.querySelectorAll('.float-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function floatCopy(btn) {
+    if(entries.length === 0) {
+      btn.textContent = '❌';
+      setTimeout(()=>{ btn.innerHTML = '📋<div class="float-tooltip">Copiar texto</div>'; }, 1200);
+      return;
+    }
+    const text = entries.map(e => `[${e.time}] ${e.text}`).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✅';
+      setTimeout(()=>{ btn.innerHTML = '📋<div class="float-tooltip">Copiar texto</div>'; }, 1500);
+    });
+  }
+
+  // Sync toolbar with recording state
+  const _origStartUI = startSpeechRecognitionWithStream;
+  // Patch stop to update toolbar
+  const _origStop = stopRecording;
+  function updateToolbarRecording(active) {
+    const dot = document.getElementById('floatRecDot');
+    const icon = document.getElementById('floatRecIcon');
+    const stopBtn = document.getElementById('floatStop');
+    const recBtn = document.getElementById('floatRecord');
+    if(active) {
+      dot.style.display = 'block';
+      icon.textContent = '⏸';
+      recBtn.classList.add('record-active');
+      if(stopBtn) stopBtn.style.display = '';
+      document.getElementById('floatRecTooltip').textContent = 'Pausar';
+    } else {
+      dot.style.display = 'none';
+      icon.textContent = '🎙️';
+      recBtn.classList.remove('record-active');
+      if(stopBtn) stopBtn.style.display = 'none';
+      document.getElementById('floatRecTooltip').textContent = 'Grabar reunión';
+    }
+  }
+
+  // MutationObserver to watch recording state visibility
+  const recStateEl = document.getElementById('recordingState');
+  if(recStateEl) {
+    new MutationObserver(() => {
+      const visible = recStateEl.style.display !== 'none';
+      updateToolbarRecording(visible);
+    }).observe(recStateEl, { attributes: true, attributeFilter: ['style'] });
+  }
+
 </script>
 </body>
 </html>
